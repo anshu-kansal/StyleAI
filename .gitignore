@@ -54,3 +54,6 @@ jspm_packages/
 .env.production.local
 
 # End of gitignore
+
+.vercel
+.env*
