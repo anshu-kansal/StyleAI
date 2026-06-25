@@ -1,9 +1,11 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import os from 'os';
 import { ApiError } from '../utils/api-error';
 
-const tempUploadDir = path.join(__dirname, '../../../uploads/temp');
+// Railway-safe temporary directory
+const tempUploadDir = path.join(os.tmpdir(), 'uploads');
 
 // Ensure temp upload directory exists
 if (!fs.existsSync(tempUploadDir)) {
@@ -15,20 +17,40 @@ const storage = multer.diskStorage({
     cb(null, tempUploadDir);
   },
   filename: (_req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    const uniqueSuffix =
+      Date.now() + '-' + Math.round(Math.random() * 1e9);
+
     const ext = path.extname(file.originalname);
+
     cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
   },
 });
 
-const fileFilter = (_req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+const fileFilter = (
+  _req: any,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback
+) => {
+  const allowedExtensions = [
+    '.jpg',
+    '.jpeg',
+    '.png',
+    '.webp',
+    '.gif',
+  ];
+
   const ext = path.extname(file.originalname).toLowerCase();
-  
+
   if (allowedExtensions.includes(ext)) {
     cb(null, true);
   } else {
-    cb(new ApiError(400, `Unsupported file format ${ext}. Allowed formats: ${allowedExtensions.join(', ')}`) as any, false);
+    cb(
+      new ApiError(
+        400,
+        `Unsupported file format ${ext}. Allowed formats: ${allowedExtensions.join(', ')}`
+      ) as any,
+      false
+    );
   }
 };
 
@@ -36,7 +58,7 @@ export const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+    fileSize: 5 * 1024 * 1024,
   },
 });
 
